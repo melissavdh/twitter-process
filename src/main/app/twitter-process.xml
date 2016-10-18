@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/twitter http://www.mulesoft.org/schema/mule/twitter/current/mule-twitter.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <twitter:config name="Twitter__Configuration" accessKey="2821192978-vgh1Le4Br96HeVsckMMOSEGvpcJRaurqZkVdALg" accessSecret="Yso4pVMEau29r0J9CpMBD8ltvvidChDvijfSlD8cB30Q5" consumerKey="Y6Rt49hEwsQ8LGU4fHtnKd115" consumerSecret="d6ZCiXSacjTMrnjCimCpsE3UB1YmNTUl5NIY74WFJ7uBZzgL5B" doc:name="Twitter: Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="bb-8-system-api.eu.cloudhub.io" port="80" basePath="/api" doc:name="HTTP Request Configuration">
+        <http:raml-api-configuration location="http://bb-8-system-api.eu.cloudhub.io/console"/>
+    </http:request-config>
+    <http:request-config name="HTTP_Request_Configuration1" host="bb-8-system-api.eu.cloudhub.io" port="80" basePath="/api" doc:name="HTTP Request Configuration">
+        <http:raml-api-configuration location="http://bb-8-system-api.eu.cloudhub.io/console"/>
+    </http:request-config>
+    <flow name="twitter-listenForColour" tracking:enable-default-events="true">
+        <twitter:user-stream config-ref="Twitter__Configuration" doc:name="Twitter (Streaming)">
+        	<twitter:keywords>
+                <twitter:keyword>#MuleSoftSummit #devtrack</twitter:keyword>
+            </twitter:keywords>
+        </twitter:user-stream>
+        <logger message="#[payload]" level="INFO" doc:name="Log payload"/>
+        <set-payload value="#[org.mule.util.StringUtils.trim(org.mule.util.StringUtils.substringAfter(payload.payload.text, 'colour: '))]" doc:name="Set payload to colour"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/colour" method="POST" doc:name="Call BB-8 API - set colour">
+            <http:request-builder>
+                <http:query-param paramName="colour" value="#[payload]"/>
+                <http:query-param paramName="client_id" value="${bb8.client.id}"/>
+                <http:query-param paramName="client_secret" value="${bb8.client.secret}"/>
+            </http:request-builder>
+        </http:request>
+    </flow>
+</mule>
